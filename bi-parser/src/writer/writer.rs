@@ -1,3 +1,7 @@
+//! # Writer Module
+//!
+//! Provides the `BiWriter`.
+
 use super::error::BiWriterError;
 use crate::prelude::{BiError, BiField, MARKER_BLOB, MARKER_INT, MARKER_SYM, NEWLINE, SPACE};
 use crate::validator::utils::validate_field_name;

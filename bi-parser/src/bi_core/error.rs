@@ -1,12 +1,13 @@
+//! # Core Error Module
 //!
-//!
+//! This module provides the top level crate error type.
 
 use crate::parser::error::BiParserError;
 use crate::validator::error::BiValidationError;
 use crate::writer::error::BiWriterError;
 use thiserror::Error;
 
-/// Top-level error type combining all possible bi format errors.
+/// Top-level error type combining all possible bi related errors.
 #[derive(Debug, Error)]
 pub enum BiError {
     /// Low level I/O error.

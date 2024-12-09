@@ -1,3 +1,7 @@
+//! # Parser Error Module
+//!
+//! This module provides the parser error type.
+
 use crate::validator::error::BiValidationError;
 use thiserror::Error;
 

@@ -1,3 +1,7 @@
+//! # Validator Utils Module
+//!
+//! Provides the utility functions for validating input against the bi format spec.
+
 use super::error::BiValidationError;
 use crate::bi_core::types::FieldMarker;
 use crate::bi_core::{MARKER_SYM, NEWLINE, SPACE};

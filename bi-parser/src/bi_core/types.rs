@@ -1,5 +1,7 @@
+//! # Core Types Module
 //!
-//!
+//! This module provides the funamental types used throughout the library, including field types
+//! and markers.
 
 use std::fmt;
 

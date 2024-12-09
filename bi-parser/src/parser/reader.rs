@@ -1,3 +1,7 @@
+//! # Reader Module
+//!
+//! Provides the `BiReader`.
+
 use super::error::BiParserError;
 use crate::bi_core::types::FieldMarker;
 use crate::bi_core::{NEWLINE, SPACE};

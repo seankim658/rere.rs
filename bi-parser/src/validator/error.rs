@@ -1,3 +1,7 @@
+//! # Validator Error Module
+//!
+//! This module provides the validator error type.
+
 use crate::bi_core::{BIDOCS, MARKER_BLOB, MARKER_INT, MARKER_SYM};
 use std::fmt;
 use thiserror::Error;

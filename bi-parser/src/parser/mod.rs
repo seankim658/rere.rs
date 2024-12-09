@@ -15,5 +15,5 @@
 //! let field = reader.read_field_default().unwrap();
 //! ```
 
-pub mod reader;
 pub mod error;
+pub mod reader;
