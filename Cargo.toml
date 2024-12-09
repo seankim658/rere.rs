@@ -1,0 +1,3 @@
+[workspace]
+members = ["bi-parser", "rere-app"]
+resolver = "2"
