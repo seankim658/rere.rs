@@ -40,21 +40,14 @@ pub fn validate_marker(marker: [u8; 3], full_validation: bool) -> Result<(), BiV
 ///
 /// ### Parameters
 /// - `name_bytes`: Bytes containing the field names.
-/// - `full_validation`: Whether to perform full validation, prevents duplicate operations when
 /// also parsing the field.
-pub fn validate_field_name(
-    name_bytes: &[u8],
-    full_validation: bool,
-) -> Result<(), BiValidationError> {
+pub fn validate_field_name(name_bytes: &[u8]) -> Result<(), BiValidationError> {
     if name_bytes.is_empty() {
         return Err(BiValidationError::InvalidFieldName(
             "empty field name".to_owned(),
         ));
     }
-
-    if full_validation {
-        std::str::from_utf8(name_bytes)?;
-    }
+    std::str::from_utf8(name_bytes)?;
 
     Ok(())
 }
@@ -131,18 +124,18 @@ mod tests {
     #[test]
     fn test_validate_field_name() {
         // Valid names
-        assert!(validate_field_name(b"test", true).is_ok());
-        assert!(validate_field_name(b"test_123", true).is_ok());
+        assert!(validate_field_name(b"test").is_ok());
+        assert!(validate_field_name(b"test_123").is_ok());
 
         // Empty name
         assert!(matches!(
-            validate_field_name(b"", true),
+            validate_field_name(b""),
             Err(BiValidationError::InvalidFieldName(_))
         ));
 
         // Invalid UTF-8
         let invalid_utf8 = &[0xFF, 0xFF];
-        assert!(validate_field_name(invalid_utf8, true).is_err());
+        assert!(validate_field_name(invalid_utf8).is_err());
     }
 
     #[test]

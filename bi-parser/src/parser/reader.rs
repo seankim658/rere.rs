@@ -68,13 +68,9 @@ impl<R: Read> BiReader<R> {
         // Remove trailing space.
         name_bytes.pop();
         if validate {
-            validate_field_name(&name_bytes, false)
+            validate_field_name(&name_bytes)
                 .map_err(|e| BiParserError::ValidationError(e))?;
         }
-        // Convert name bytes to UTF-8 string.
-        let name = String::from_utf8(name_bytes).map_err(|e| {
-            BiParserError::ValidationError(BiValidationError::Utf8Error(e.utf8_error()))
-        })?;
 
         match marker_type {
             FieldMarker::Integer => {
@@ -100,7 +96,7 @@ impl<R: Read> BiReader<R> {
                     .parse::<u64>()
                     .map_err(|_| BiValidationError::InvalidInteger(value_str))?;
 
-                Ok(BiField::Integer { name, value })
+                Ok(BiField::Integer { name: name_bytes, value })
             }
             FieldMarker::Blob => {
                 let mut size_bytes = Vec::new();
@@ -136,7 +132,7 @@ impl<R: Read> BiReader<R> {
                 }
                 data.pop();
 
-                Ok(BiField::Blob { name, data })
+                Ok(BiField::Blob { name: name_bytes, data })
             }
         }
     }
@@ -158,7 +154,7 @@ mod tests {
 
         match field {
             BiField::Integer { name, value } => {
-                assert_eq!(name, "count");
+                assert_eq!(name, b"count");
                 assert_eq!(value, 42);
             }
             _ => panic!("Expected integer field"),
@@ -172,7 +168,7 @@ mod tests {
 
         match field {
             BiField::Blob { name, data } => {
-                assert_eq!(name, "data");
+                assert_eq!(name, b"data");
                 assert_eq!(data, b"hello");
             }
             _ => panic!("Expected blob field"),
