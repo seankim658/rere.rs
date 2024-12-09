@@ -8,19 +8,19 @@ use std::fmt;
 #[derive(Debug, Clone, PartialEq)]
 pub enum BiField {
     /// An integer field with format `:i name value\n`
-    Integer { name: String, value: u64 },
+    Integer { name: Vec<u8>, value: u64 },
     /// A blob field with format `:b name size\ndata\n`
-    Blob { name: String, data: Vec<u8> },
+    Blob { name: Vec<u8>, data: Vec<u8> },
 }
 
 impl fmt::Display for BiField {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             BiField::Integer { name, value } => {
-                write!(f, ":i {} {}", name, value)
+                write!(f, ":i {} {}", String::from_utf8_lossy(name), value)
             }
             BiField::Blob { name, data } => {
-                write!(f, ":b {} {}", name, data.len())
+                write!(f, ":b {} {}", String::from_utf8_lossy(name), data.len())
             }
         }
     }
