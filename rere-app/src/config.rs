@@ -1,9 +1,9 @@
-use crate::constants::{HISTORY, SNAPSHOT_DIR, TEST_FILE};
-use anyhow::{anyhow, Context, Result};
+use crate::constants::{FAILFAST, HISTORY, OVERWRITE, SNAPSHOT_DIR, TEST_FILE};
+use anyhow::{Context, Result};
 use chrono::{DateTime, Duration, Utc};
-use serde::{Deserialize, Serialize};
-use std::fs;
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::path::{Path, PathBuf};
+use std::{fs, u64};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Config {
@@ -38,6 +38,9 @@ pub struct ReplayConfig {
 pub struct StateConfig {
     pub latest_snapshots: Vec<PathBuf>,
     pub timestamps: Vec<DateTime<Utc>>,
+    /// Vector of elapsed times for recorded snapshots. Uses custom serialization to store
+    /// durations as nanoseconds instead of `[seconds, nanoseconds]` pairs.
+    #[serde(with = "vec_duration")]
     pub elapsed_time: Vec<Duration>,
 }
 
@@ -49,8 +52,12 @@ impl Default for Config {
                 snapshot_dir: PathBuf::from(SNAPSHOT_DIR),
                 history: HISTORY,
             },
-            record: RecordConfig { overwrite: true },
-            replay: ReplayConfig { fail_fast: false },
+            record: RecordConfig {
+                overwrite: OVERWRITE,
+            },
+            replay: ReplayConfig {
+                fail_fast: FAILFAST,
+            },
             state: StateConfig::default(),
         }
     }
@@ -137,4 +144,61 @@ pub fn init_config(
     config.init_snapshot_dir(config_path.parent().unwrap(), &config.common.snapshot_dir)?;
     config.save(config_path)?;
     Ok(config)
+}
+
+/// Wrapper struct that allows serializing and deserializing `chrono::Duration` values as a single
+/// number of nanoseconds rather than the default `[seconds, nanoseconds]` format.
+#[derive(Debug)]
+pub struct SerializableDuration(Duration);
+
+impl Serialize for SerializableDuration {
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        // Convert the `Duration` to nanoseconds and serlize as a single number
+        let nanos = self.0.num_nanoseconds().unwrap_or(0) as u64;
+        serializer.serialize_u64(nanos)
+    }
+}
+
+impl<'de> Deserialize<'de> for SerializableDuration {
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        // Read the nanoseconds value and convert back to a `Duration`
+        let millis = u64::deserialize(deserializer)?;
+        Ok(SerializableDuration(Duration::nanoseconds(millis as i64)))
+    }
+}
+
+/// Module providing serialization for `Vec<Duration>`.
+///
+/// This module is used with serde's `#[serde(with = "vec_duration")]` attribute to customize how
+/// vectors of `Duration` are serialized/deserialized.
+mod vec_duration {
+    use super::*;
+    use serde::{Deserialize, Deserializer, Serialize, Serializer};
+
+    /// Serializes a `Vec<Duration>` by converting each `Duration` to a `SerializableDuration`.
+    pub fn serialize<S>(times: &Vec<Duration>, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        // Convert each Duration to our SerializableDuration wrapper and serialize the vector
+        let v: Vec<SerializableDuration> = times.iter().map(|d| SerializableDuration(*d)).collect();
+        v.serialize(serializer)
+    }
+
+    /// Deserializes a `Vec<Duration>` by first deserializing to Vec<SerializableDuration>
+    /// and then converting back to Vec<Duration>.
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Vec<Duration>, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        // Deserialize to Vec<SerializableDuration> first, then convert to Vec<Duration>
+        let v: Vec<SerializableDuration> = Vec::deserialize(deserializer)?;
+        Ok(v.into_iter().map(|sd| sd.0).collect())
+    }
 }

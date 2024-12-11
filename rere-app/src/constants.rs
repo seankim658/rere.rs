@@ -6,3 +6,7 @@ pub const TEST_FILE: &str = "test.list";
 pub const SNAPSHOT_DIR: &str = "snapshots";
 /// Default history logging.
 pub const HISTORY: usize = 3;
+/// Default for overwrite arg.
+pub const OVERWRITE: bool = false;
+/// Default for fail fast arg.
+pub const FAILFAST: bool = true;
