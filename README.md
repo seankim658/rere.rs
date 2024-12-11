@@ -1,5 +1,7 @@
 # ReRe.rs (Record Replay)
 
+Work in progress.
+
 This project is a command line universal behavior testing tool inspired by [rere.py](https://github.com/tsoding/rere.py). I was inspired by the simple, elegant solution presented in the original project to the problem of universal testing but wanted a compiled binary for more ubiquitous and comprehensive usage. This project provides a significant extension on top of the original concept. The rere tool makes use of the [bi format](https://github.com/tsoding/bi-format), a simple structured human readable binary format.
 
 ## Project Structure
