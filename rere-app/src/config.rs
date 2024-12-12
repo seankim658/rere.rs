@@ -79,8 +79,10 @@ impl Config {
         Ok(())
     }
 
-    pub fn init_snapshot_dir(&self, base_dir: &Path, snapshot_dir: &Path) -> Result<()> {
-        fs::create_dir_all(base_dir.join(snapshot_dir))?;
+    pub fn init(&self, base_dir: &Path, snapshot_dir: &Path, test_file: &Path) -> Result<()> {
+        fs::create_dir_all(base_dir.join(snapshot_dir))
+            .context("Failed to construct path to snapshot directory")?;
+        fs::File::create(base_dir.join(test_file)).context("Unable to create test file")?;
         Ok(())
     }
 
@@ -141,7 +143,11 @@ pub fn init_config(
         config.replay.fail_fast = fail_fast;
     }
 
-    config.init_snapshot_dir(config_path.parent().unwrap(), &config.common.snapshot_dir)?;
+    config.init(
+        config_path.parent().unwrap(),
+        &config.common.snapshot_dir,
+        &config.common.test_file,
+    )?;
     config.save(config_path)?;
     Ok(config)
 }
