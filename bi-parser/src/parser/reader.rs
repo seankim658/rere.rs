@@ -41,6 +41,29 @@ impl<R: Read> BiReader<R> {
     /// ### Returns
     /// `Result<BiField, BiError>`
     pub fn read_field(&mut self, validate: bool) -> Result<BiField, BiError> {
+        // Skip any comment lines
+        loop {
+            let bytes_to_consume = {
+                let buf = self.reader.fill_buf()?;
+                if buf.is_empty() {
+                    return Err(
+                        BiParserError::UnexpectedEof("while reading marker".to_owned()).into(),
+                    );
+                }
+
+                if buf.starts_with(b"//") {
+                    // Find end of comment line
+                    let newline_pos = buf.iter().position(|&b| b == b'\n').unwrap_or(buf.len());
+                    newline_pos + 1.min(buf.len())
+                } else {
+                    break;
+                }
+            };
+
+            // Consume the comment line
+            self.reader.consume(bytes_to_consume);
+        }
+
         // Read the 3-byte marker consisting of `:`, the marker type, and a space.
         let mut marker = [0u8; 3];
         self.reader

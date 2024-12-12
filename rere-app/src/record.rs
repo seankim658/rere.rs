@@ -60,9 +60,9 @@ fn write_snapshot(path: &Path, outputs: &[CommandOutput]) -> Result<()> {
     let mut writer = BiWriter::new(file);
 
     // Write count of tests
-    writer.write_field_default(&BiField::SignedInteger {
+    writer.write_field_default(&BiField::Integer {
         name: b"count".to_vec(),
-        value: outputs.len() as i64,
+        value: outputs.len() as u64,
     })?;
 
     // Write each test output
@@ -71,9 +71,9 @@ fn write_snapshot(path: &Path, outputs: &[CommandOutput]) -> Result<()> {
             name: b"shell".to_vec(),
             data: output.shell.as_bytes().to_vec(),
         })?;
-        writer.write_field_default(&BiField::Integer {
+        writer.write_field_default(&BiField::SignedInteger {
             name: b"returncode".to_vec(),
-            value: output.returncode as u64,
+            value: output.returncode as i64,
         })?;
         writer.write_field_default(&BiField::Blob {
             name: b"stdout".to_vec(),
