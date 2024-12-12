@@ -3,7 +3,7 @@
 //! Provides the `BiWriter`.
 
 use super::error::BiWriterError;
-use crate::prelude::{BiError, BiField, MARKER_BLOB, MARKER_INT, MARKER_SYM, NEWLINE, SPACE};
+use crate::prelude::*;
 use crate::validator::utils::validate_field_name;
 use std::io::Write;
 
@@ -30,6 +30,17 @@ impl<W: Write> BiWriter<W> {
                 }
 
                 content.extend_from_slice(&[MARKER_SYM, MARKER_INT, SPACE]);
+                content.extend_from_slice(name);
+                content.extend_from_slice(&[SPACE]);
+                content.extend_from_slice(value.to_string().as_bytes());
+                content.push(NEWLINE);
+            }
+            BiField::SignedInteger { name, value } => {
+                if validate {
+                    validate_field_name(name).map_err(|e| BiWriterError::ValidationError(e))?;
+                }
+
+                content.extend_from_slice(&[MARKER_SYM, MARKER_SINT, SPACE]);
                 content.extend_from_slice(name);
                 content.extend_from_slice(&[SPACE]);
                 content.extend_from_slice(value.to_string().as_bytes());

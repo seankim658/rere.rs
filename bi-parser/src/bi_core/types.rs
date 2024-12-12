@@ -9,9 +9,11 @@ use std::fmt;
 /// associated name.
 #[derive(Debug, Clone, PartialEq)]
 pub enum BiField {
-    /// An integer field with format `:i name value\n`
+    /// An integer field with the format `:i name value\n`
     Integer { name: Vec<u8>, value: u64 },
-    /// A blob field with format `:b name size\ndata\n`
+    /// A signed integer field with the format `:s name value\n`
+    SignedInteger { name: Vec<u8>, value: i64 },
+    /// A blob field with the format `:b name size\ndata\n`
     Blob { name: Vec<u8>, data: Vec<u8> },
 }
 
@@ -20,6 +22,9 @@ impl fmt::Display for BiField {
         match self {
             BiField::Integer { name, value } => {
                 write!(f, ":i {} {}", String::from_utf8_lossy(name), value)
+            }
+            BiField::SignedInteger { name, value } => {
+                write!(f, ":s {} {}", String::from_utf8_lossy(name), value)
             }
             BiField::Blob { name, data } => {
                 write!(f, ":b {} {}", String::from_utf8_lossy(name), data.len())
@@ -32,6 +37,7 @@ impl fmt::Display for BiField {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum FieldMarker {
     Integer,
+    SignedInteger,
     Blob,
 }
 
@@ -40,6 +46,7 @@ impl FieldMarker {
     pub fn from_byte(byte: u8) -> Option<Self> {
         match byte {
             crate::bi_core::MARKER_INT => Some(FieldMarker::Integer),
+            crate::bi_core::MARKER_SINT => Some(FieldMarker::SignedInteger),
             crate::bi_core::MARKER_BLOB => Some(FieldMarker::Blob),
             _ => None,
         }

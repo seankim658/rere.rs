@@ -8,7 +8,7 @@ use crate::bi_core::{NEWLINE, SPACE};
 use crate::prelude::{BiError, BiField};
 use crate::validator::error::BiValidationError;
 use crate::validator::utils::{
-    validate_blob, validate_field_name, validate_integer, validate_marker,
+    validate_blob, validate_field_name, validate_integer, validate_marker, validate_signed_integer,
 };
 use std::io::{BufRead, BufReader, Read};
 
@@ -72,8 +72,7 @@ impl<R: Read> BiReader<R> {
         // Remove trailing space.
         name_bytes.pop();
         if validate {
-            validate_field_name(&name_bytes)
-                .map_err(|e| BiParserError::ValidationError(e))?;
+            validate_field_name(&name_bytes).map_err(|e| BiParserError::ValidationError(e))?;
         }
 
         match marker_type {
@@ -100,7 +99,38 @@ impl<R: Read> BiReader<R> {
                     .parse::<u64>()
                     .map_err(|_| BiValidationError::InvalidInteger(value_str))?;
 
-                Ok(BiField::Integer { name: name_bytes, value })
+                Ok(BiField::Integer {
+                    name: name_bytes,
+                    value,
+                })
+            }
+            FieldMarker::SignedInteger => {
+                let mut value_bytes = Vec::new();
+                self.reader
+                    .read_until(NEWLINE, &mut value_bytes)
+                    .map_err(|e| {
+                        BiParserError::ReadError(format!(
+                            "error reading signed integer field value: {}",
+                            e.to_string()
+                        ))
+                    })?;
+                value_bytes.pop();
+                if validate {
+                    validate_signed_integer(&value_bytes)
+                        .map_err(|e| BiParserError::ValidationError(e))?;
+                }
+
+                let value_str = String::from_utf8(value_bytes).map_err(|e| {
+                    BiParserError::ValidationError(BiValidationError::Utf8Error(e.utf8_error()))
+                })?;
+                let value = value_str
+                    .parse::<i64>()
+                    .map_err(|_| BiValidationError::InvalidInteger(value_str))?;
+
+                Ok(BiField::SignedInteger {
+                    name: name_bytes,
+                    value,
+                })
             }
             FieldMarker::Blob => {
                 let mut size_bytes = Vec::new();
@@ -136,7 +166,10 @@ impl<R: Read> BiReader<R> {
                 }
                 data.pop();
 
-                Ok(BiField::Blob { name: name_bytes, data })
+                Ok(BiField::Blob {
+                    name: name_bytes,
+                    data,
+                })
             }
         }
     }

@@ -60,9 +60,9 @@ fn write_snapshot(path: &Path, outputs: &[CommandOutput]) -> Result<()> {
     let mut writer = BiWriter::new(file);
 
     // Write count of tests
-    writer.write_field_default(&BiField::Integer {
+    writer.write_field_default(&BiField::SignedInteger {
         name: b"count".to_vec(),
-        value: outputs.len() as u64,
+        value: outputs.len() as i64,
     })?;
 
     // Write each test output

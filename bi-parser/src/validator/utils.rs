@@ -70,6 +70,25 @@ pub fn validate_integer(bytes: &[u8]) -> Result<(), BiValidationError> {
     Ok(())
 }
 
+/// Validates a byte sequence contains only ASCII digits preceeded by a negative sign.
+///
+/// ### Parameters
+/// - `bytes`: Bytes to validate.
+pub fn validate_signed_integer(bytes: &[u8]) -> Result<(), BiValidationError> {
+    if bytes.is_empty() {
+        return Err(BiValidationError::InvalidInteger(
+            "empty signed integer".to_owned(),
+        ));
+    }
+
+    let s = std::str::from_utf8(bytes)?;
+    if s.parse::<i64>().is_err() {
+        return Err(BiValidationError::InvalidInteger(s.to_owned()));
+    }
+
+    Ok(())
+}
+
 /// Validates blob content size and format. Checks:
 /// - Blob content includes trailing newline.
 /// - Content size matches expected size without trailing newline.
