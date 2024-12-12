@@ -56,21 +56,27 @@ pub fn validate_field_name(name_bytes: &[u8]) -> Result<(), BiValidationError> {
     Ok(())
 }
 
-/// Validates a byte sequence contains only ASCII digits.
+/// Validates a byte sequence contains only ASCII digits, doesn't overflow, and is not empty.
 ///
 /// ### Parameters
 /// - `bytes`: Bytes to validate.
 pub fn validate_integer(bytes: &[u8]) -> Result<(), BiValidationError> {
-    if !bytes.iter().all(|b| b.is_ascii_digit()) {
+    if bytes.is_empty() {
         return Err(BiValidationError::InvalidInteger(
-            String::from_utf8_lossy(bytes).into_owned(),
+            "empty integer".to_owned(),
         ));
+    }
+
+    let s = std::str::from_utf8(bytes)?;
+    if s.parse::<u64>().is_err() {
+        return Err(BiValidationError::InvalidInteger(s.to_owned()));
     }
 
     Ok(())
 }
 
-/// Validates a byte sequence contains only ASCII digits preceeded by a negative sign.
+/// Validates a byte sequence contains only ASCII digits preceeded by a negative sign, doesn't
+/// overflow, and is not emtpy.
 ///
 /// ### Parameters
 /// - `bytes`: Bytes to validate.
