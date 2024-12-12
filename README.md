@@ -40,4 +40,3 @@ Several features over the original project were built into the rere.rs app, incl
 In addition, this project supports a minor extension on original the bi format:
 
 - A signed integer marker type (`:s`)
-- Single line comments (`//`)
