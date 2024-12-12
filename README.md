@@ -36,6 +36,7 @@ Several features over the original project were built into the rere.rs app, incl
 - Standardized readme
 - Basic metadata tracking
 - Fast fail options for snapshot replaying
+- Single line comment (`//`) support in test files
 
 In addition, this project supports a minor extension on original the bi format:
 
