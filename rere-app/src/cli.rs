@@ -41,4 +41,19 @@ pub enum Command {
         #[clap(long)]
         fail_fast: Option<bool>,
     },
+
+    /// Clean up snapshots, all testing files, or reset config.
+    Clean {
+        /// Clean up all testing files, directories, and subdirectories.
+        #[clap(long)]
+        all: bool,
+
+        /// Clean up all snapshot files.
+        #[clap(long)]
+        snapshots: bool,
+
+        /// Reset config file to defaults (except for `test_file` and `snapshot_dir` values).
+        #[clap(long)]
+        config: bool,
+    },
 }
