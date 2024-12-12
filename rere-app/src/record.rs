@@ -29,7 +29,18 @@ pub fn record(config: &mut Config, config_path: &PathBuf) -> Result<()> {
 
     // Generate snapshot filename with timestamp
     let timestamp = chrono::Utc::now();
-    let snapshot_name = format!("snapshot_{}.bi", timestamp.format("%Y%m%d_%H%M%S"));
+    let snapshot_name = match config.record.overwrite {
+        true => {
+            format!("{}.bi", config.common.test_file.display())
+        }
+        false => {
+            format!(
+                "{}_{}.bi",
+                config.common.test_file.display(),
+                timestamp.format("%Y%m%d_%H%M%S")
+            )
+        }
+    };
     let snapshot_path = base_dir
         .join(&config.common.snapshot_dir)
         .join(snapshot_name);
