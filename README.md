@@ -13,11 +13,13 @@ The project is split into two parts:
 
 ## Quick Start
 
-1. Download the release binary or build the binary crate from source.
-2. From your project's root directory, run `rere init`, this will create a config at `rere/rere.toml` and create a directory to store the record snapshots at `rere/snapshots/`.
-3. Create your test file, the default config looks for a `test.list` file. The test file is just a text file with one shell command per line.
-4. Record the expected behavior with `rere record`. This will create the `.bi` snapshot file here: `rere/snapshots/test.list.bi`.
-5. Later, you can run `rere replay` to replay the test file.
+1. Download the release binary or build the crate from source.
+2. From your project's root directory, run `rere init`, this will create: 
+   - A config at `rere/rere.toml` 
+   - A directory to store the record snapshots at `rere/snapshots/`
+   - A test file at `rere/test.list`
+3. Record the expected behavior with `rere record`. This will create the `.bi` snapshot file here: `rere/snapshots/test.list.bi`.
+4. Later, you can run `rere replay` to replay the test file (the default `fail_fast` setting is `true` so the replay will report the first difference, if any, and exit).
 
 Note: All these features are configurable either through [command line arguments](/rere-app/README.md#arguments) or by manually building/editing the `.toml` [config file](/rere-app/README.md#config-file).
 
@@ -27,16 +29,14 @@ Several features over the original project were built into the rere.rs app, incl
 
 - Command line tool
 - Config file for persisting and tracking testing configurations
-- Init command functionality for easy test structure setup
+- Init command functionality for easy test structure setup and cleanup
 - Dedicated snapshot and recording directory
 - Ability to version snapshot files for testing history
 - Ability to capture file system changes (for testing scripts that write to log files instead of to stdout)
 - Standardized readme
-- Metadata tracking
+- Basic metadata tracking
 - Fast fail options for snapshot replaying
 
-In addition, this project makes a few extensions to the bi format, including:
+In addition, this project supports a minor extension on original the bi format:
 
 - A signed integer marker type (`:s`)
-- A float marker type (`:f`)
-- A signed float marker type (`:x`)
