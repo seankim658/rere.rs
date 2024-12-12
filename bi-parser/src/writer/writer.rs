@@ -89,6 +89,15 @@ mod tests {
     }
 
     #[test]
+    fn test_write_signed_integer() {
+        let field = BiField::SignedInteger {
+            name: b"count".to_vec(),
+            value: -42,
+        };
+        write_and_verify(&field, b":s count -42\n");
+    }
+
+    #[test]
     fn test_write_blob() {
         let field = BiField::Blob {
             name: b"data".to_vec(),

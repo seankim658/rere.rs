@@ -185,6 +185,29 @@ mod tests {
     }
 
     #[test]
+    fn test_validate_signed_integer() {
+        // Valid signed integers
+        assert!(validate_signed_integer(b"123").is_ok());
+        assert!(validate_signed_integer(b"-123").is_ok());
+        assert!(validate_signed_integer(b"0").is_ok());
+        assert!(validate_signed_integer(b"-0").is_ok());
+
+        // Invalid signed integers
+        assert!(matches!(
+            validate_signed_integer(b""),
+            Err(BiValidationError::InvalidInteger(_))
+        ));
+        assert!(matches!(
+            validate_signed_integer(b"12a3"),
+            Err(BiValidationError::InvalidInteger(_))
+        ));
+        assert!(matches!(
+            validate_signed_integer(b"--123"),
+            Err(BiValidationError::InvalidInteger(_))
+        ));
+    }
+
+    #[test]
     fn test_validate_blob() {
         // Valid blob
         let content = b"test\n";

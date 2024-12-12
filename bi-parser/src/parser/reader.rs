@@ -222,6 +222,20 @@ mod tests {
     }
 
     #[test]
+    fn test_read_signed_integer_field() {
+        let mut reader = create_reader(":s count -42\n");
+        let field = reader.read_field_default().unwrap();
+
+        match field {
+            BiField::SignedInteger { name, value } => {
+                assert_eq!(name, b"count");
+                assert_eq!(value, -42);
+            }
+            _ => panic!("Expected signed integer field"),
+        }
+    }
+
+    #[test]
     fn test_read_blob_field() {
         let mut reader = create_reader(":b data 5\nhello\n");
         let field = reader.read_field_default().unwrap();
@@ -260,6 +274,17 @@ mod tests {
     #[test]
     fn test_invalid_integer_value() {
         let mut reader = create_reader(":i count abc\n");
+        assert!(matches!(
+            reader.read_field_default().unwrap_err(),
+            BiError::ParseError(BiParserError::ValidationError(
+                BiValidationError::InvalidInteger(_)
+            ))
+        ));
+    }
+
+    #[test]
+    fn test_invalid_signed_integer_value() {
+        let mut reader = create_reader(":s count abc\n");
         assert!(matches!(
             reader.read_field_default().unwrap_err(),
             BiError::ParseError(BiParserError::ValidationError(
