@@ -7,6 +7,6 @@ pub const SNAPSHOT_DIR: &str = "snapshots";
 /// Default history logging.
 pub const HISTORY: usize = 3;
 /// Default for overwrite arg.
-pub const OVERWRITE: bool = false;
+pub const OVERWRITE: bool = true;
 /// Default for fail fast arg.
 pub const FAILFAST: bool = true;
