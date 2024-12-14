@@ -2,6 +2,7 @@ mod cli;
 mod config;
 pub mod constants;
 mod record;
+mod replay;
 mod shell;
 
 use anyhow::Result;
@@ -12,6 +13,16 @@ use std::fs;
 
 fn main() -> Result<()> {
     let args = Args::parse();
+
+    if !matches!(args.command, Command::Init { .. }) {
+        let base_dir = args.config.parent().unwrap();
+        if !base_dir.exists() {
+            anyhow::bail!(
+                "Testing environment not found at: {}. Run `rere init` first.",
+                base_dir.display()
+            );
+        }
+    }
 
     match args.command {
         Command::Init {
@@ -33,8 +44,23 @@ fn main() -> Result<()> {
         }
         Command::Record => {
             let mut config = Config::load_or_create(&args.config)?;
-            record::record(&mut config, &args.config)?;
-            println!("Recording completed successfully");
+            match record::record(&mut config, &args.config) {
+                Ok(_) => println!("Recording completed successfully"),
+                Err(e) => {
+                    eprint!("Error during recording: {}", e);
+                    std::process::exit(1);
+                }
+            }
+        }
+        Command::Replay => {
+            let mut config = Config::load_or_create(&args.config)?;
+            match replay::replay(&mut config, &args.config) {
+                Ok(_) => println!("Recording completed successfully"),
+                Err(e) => {
+                    eprint!("Error during recording: {}", e);
+                    std::process::exit(1);
+                }
+            }
         }
         Command::Clean {
             all,
