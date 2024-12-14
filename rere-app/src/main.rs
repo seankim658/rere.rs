@@ -47,7 +47,7 @@ fn main() -> Result<()> {
             match record::record(&mut config, &args.config) {
                 Ok(_) => println!("Recording completed successfully"),
                 Err(e) => {
-                    eprint!("Error during recording: {}", e);
+                    eprintln!("Error during recording: {}", e);
                     std::process::exit(1);
                 }
             }
@@ -57,7 +57,7 @@ fn main() -> Result<()> {
             match replay::replay(&mut config, &args.config) {
                 Ok(_) => println!("Recording completed successfully"),
                 Err(e) => {
-                    eprint!("Error during recording: {}", e);
+                    eprintln!("Error during recording: {}", e);
                     std::process::exit(1);
                 }
             }
