@@ -6,7 +6,7 @@ use std::path::PathBuf;
 #[derive(Parser, Debug)]
 #[clap(name = "rere", version = "0.0.1")]
 pub struct Args {
-    /// Path to config file (optional).
+    /// Path to config file.
     #[clap(value_name = "CONFIG", default_value = CONFIG_PATH)]
     pub config: PathBuf,
 
@@ -20,25 +20,30 @@ pub enum Command {
     /// Record shell command args.
     Record,
 
+    /// Replay and verify shell commands against recorded snapshot.
+    Replay,
+
     /// Initialize a new rere config.
     Init {
-        /// Override test file location (relative to config file directory).
+        /// Override test file location relative to config file directory [default: test.list].
         #[clap(long, value_name = "FILE")]
         test_file: Option<PathBuf>,
 
-        /// Overwrite default snapshots location (relative to config file directory).
+        /// Overwrite default snapshots location relative to config file directory [default:
+        /// snapshots/].
         #[clap(long, value_name = "DIR")]
         snapshot_dir: Option<PathBuf>,
 
-        #[clap(long, value_name = "NUM", default_value_t = HISTORY)]
+        /// Override default number of snapshots to keep metadata history for [default: 3].
+        #[clap(long, value_name = "NUM", default_value_t = HISTORY, hide_default_value = true)]
         history: usize,
 
-        /// Set overwrite default for record command.
-        #[clap(long)]
+        /// Set overwrite default for record command [default: true].
+        #[clap(long, value_parser)]
         overwrite: Option<bool>,
 
-        /// Set fail-fast default for replay command.
-        #[clap(long)]
+        /// Set fail-fast default for replay command [default: true].
+        #[clap(long, action)]
         fail_fast: Option<bool>,
     },
 
