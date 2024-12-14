@@ -1,18 +1,11 @@
 use crate::{
-    config::{Config, ReplayResult},
+    config::{Config, DiffContent, ReplayDiff, ReplayResult},
     record::load_test_commands,
     shell::capture,
 };
 use anyhow::Result;
 use bi_parser::prelude::*;
 use std::{fs::File, path::PathBuf, usize};
-
-pub struct ReplayDiff {
-    pub shell: String,
-    pub field: String,
-    pub expected: String,
-    pub actual: String,
-}
 
 pub fn replay(config: &mut Config, config_path: &PathBuf) -> Result<()> {
     let test_file = config.common.test_file.clone();
@@ -63,6 +56,7 @@ pub fn replay(config: &mut Config, config_path: &PathBuf) -> Result<()> {
 
     let start = std::time::Instant::now();
     let mut failed = false;
+    let mut diffs = Vec::new();
 
     // Replay each command and compare outputs
     for shell in shells {
@@ -75,7 +69,14 @@ pub fn replay(config: &mut Config, config_path: &PathBuf) -> Result<()> {
         };
 
         if shell != expected_shell {
-            print_diff("shell command", &expected_shell, &shell);
+            let diff = ReplayDiff {
+                shell: shell.clone(),
+                field: "shell command".to_owned(),
+                expected: DiffContent::Single(expected_shell),
+                actual: DiffContent::Single(shell.clone()),
+            };
+            print_diff(&diff);
+            diffs.push(diff);
             if config.replay.fail_fast {
                 failed = true;
                 break;
@@ -102,11 +103,14 @@ pub fn replay(config: &mut Config, config_path: &PathBuf) -> Result<()> {
 
         // Compare outputs
         if output.returncode as i64 != expected_returncode {
-            print_diff(
-                "return code",
-                &expected_returncode.to_string(),
-                &output.returncode.to_string(),
-            );
+            let diff = ReplayDiff {
+                shell: shell.clone(),
+                field: "return code".to_owned(),
+                expected: DiffContent::Single(expected_returncode.to_string()),
+                actual: DiffContent::Single(output.returncode.to_string()),
+            };
+            print_diff(&diff);
+            diffs.push(diff);
             if config.replay.fail_fast {
                 failed = true;
                 break;
@@ -114,11 +118,24 @@ pub fn replay(config: &mut Config, config_path: &PathBuf) -> Result<()> {
         }
 
         if output.stdout != expected_stdout {
-            print_diff(
-                "stdout",
-                &String::from_utf8_lossy(&expected_stdout),
-                &String::from_utf8_lossy(&output.stdout),
-            );
+            let diff = ReplayDiff {
+                shell: shell.clone(),
+                field: "stdout".to_owned(),
+                expected: DiffContent::Lines(
+                    String::from_utf8_lossy(&expected_stdout)
+                        .lines()
+                        .map(|s| s.to_string())
+                        .collect(),
+                ),
+                actual: DiffContent::Lines(
+                    String::from_utf8_lossy(&output.stdout)
+                        .lines()
+                        .map(|s| s.to_string())
+                        .collect(),
+                ),
+            };
+            print_diff(&diff);
+            diffs.push(diff);
             if config.replay.fail_fast {
                 failed = true;
                 break;
@@ -126,11 +143,24 @@ pub fn replay(config: &mut Config, config_path: &PathBuf) -> Result<()> {
         }
 
         if output.stderr != expected_stderr {
-            print_diff(
-                "stderr",
-                &String::from_utf8_lossy(&expected_stderr),
-                &String::from_utf8_lossy(&output.stderr),
-            );
+            let diff = ReplayDiff {
+                shell: shell.clone(),
+                field: "stderr".to_owned(),
+                expected: DiffContent::Lines(
+                    String::from_utf8_lossy(&expected_stderr)
+                        .lines()
+                        .map(|s| s.to_string())
+                        .collect(),
+                ),
+                actual: DiffContent::Lines(
+                    String::from_utf8_lossy(&output.stderr)
+                        .lines()
+                        .map(|s| s.to_string())
+                        .collect(),
+                ),
+            };
+            print_diff(&diff);
+            diffs.push(diff);
             if config.replay.fail_fast {
                 failed = true;
                 break;
@@ -145,7 +175,7 @@ pub fn replay(config: &mut Config, config_path: &PathBuf) -> Result<()> {
     } else {
         ReplayResult::Pass
     };
-    config.update_latest_replay(config_path, elapsed, result)?;
+    config.update_latest_replay(config_path, elapsed, result, diffs)?;
 
     if failed {
         anyhow::bail!("Replay failed");
@@ -155,8 +185,23 @@ pub fn replay(config: &mut Config, config_path: &PathBuf) -> Result<()> {
     Ok(())
 }
 
-fn print_diff(field: &str, expected: &str, actual: &str) {
-    println!("\nUnexpected {field}:");
-    println!("  Expected: {}", expected);
-    println!("  Actual: {}", actual);
+fn print_diff(diff: &ReplayDiff) {
+    println!("\nUnexpected {}:", diff.field);
+    match (&diff.expected, &diff.actual) {
+        (DiffContent::Single(expected), DiffContent::Single(actual)) => {
+            println!("  Expected: {}", expected);
+            println!("  Actual: {}", actual)
+        }
+        (DiffContent::Lines(expected), DiffContent::Lines(actual)) => {
+            println!("  Expected:");
+            for line in expected {
+                println!("    {}", line);
+            }
+            println!("  Actual:");
+            for line in actual {
+                println!("    {}", line);
+            }
+        }
+        _ => unreachable!("Mismatched diff content types"),
+    }
 }

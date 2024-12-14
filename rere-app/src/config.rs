@@ -35,6 +35,56 @@ pub struct ReplayConfig {
 }
 
 #[derive(Debug, Serialize, Deserialize, Default)]
+pub struct ReplayDiff {
+    pub shell: String,
+    pub field: String,
+    #[serde(with = "diff_content")]
+    pub expected: DiffContent,
+    #[serde(with = "diff_content")]
+    pub actual: DiffContent,
+}
+
+#[derive(Debug, Clone)]
+pub enum DiffContent {
+    Lines(Vec<String>),
+    Single(String),
+}
+
+impl Default for DiffContent {
+    fn default() -> Self {
+        DiffContent::Single(String::new())
+    }
+}
+
+// Custom serialization for DiffContent
+mod diff_content {
+    use super::DiffContent;
+    use serde::{Deserialize, Deserializer, Serialize, Serializer};
+
+    pub fn serialize<S>(content: &DiffContent, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        match content {
+            DiffContent::Lines(lines) => lines.serialize(serializer),
+            DiffContent::Single(s) => vec![s.clone()].serialize(serializer),
+        }
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<DiffContent, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let v: Vec<String> = Vec::deserialize(deserializer)?;
+        if v.len() == 1 {
+            Ok(DiffContent::Single(v[0].clone()))
+        } else {
+            Ok(DiffContent::Lines(v))
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Default)]
 pub struct StateConfig {
     pub latest_snapshots: Vec<PathBuf>,
     pub record_timestamps: Vec<DateTime<Utc>>,
@@ -46,6 +96,7 @@ pub struct StateConfig {
     #[serde(with = "vec_duration")]
     pub replay_elapsed_time: Vec<Duration>,
     pub replay_results: Vec<ReplayResult>,
+    pub replay_diffs: Vec<Vec<ReplayDiff>>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, Copy)]
@@ -122,18 +173,21 @@ impl Config {
         config_path: &PathBuf,
         elapsed: Duration,
         result: ReplayResult,
+        diff: Vec<ReplayDiff>,
     ) -> Result<()> {
         let timestamp = Utc::now();
 
         self.state.replay_timestamps.insert(0, timestamp);
         self.state.replay_elapsed_time.insert(0, elapsed);
         self.state.replay_results.insert(0, result);
+        self.state.replay_diffs.insert(0, diff);
 
         // Trim to history limit
         let limit = self.common.history;
         self.state.replay_timestamps.truncate(limit);
         self.state.replay_elapsed_time.truncate(limit);
         self.state.replay_results.truncate(limit);
+        self.state.replay_diffs.truncate(limit);
 
         self.save(config_path)
     }
