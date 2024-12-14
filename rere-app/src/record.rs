@@ -43,14 +43,14 @@ pub fn record(config: &mut Config, config_path: &PathBuf) -> Result<()> {
     };
     let snapshot_path = base_dir
         .join(&config.common.snapshot_dir)
-        .join(snapshot_name);
+        .join(&snapshot_name);
 
     // Write snapshot using bi-parser library
     write_snapshot(&snapshot_path, &outputs)?;
 
     // Update config with new snapshot
     let elapsed = chrono::Duration::from_std(start.elapsed())?;
-    config.update_latest_snapshot(config_path, snapshot_path, elapsed)?;
+    config.update_latest_record(config_path, PathBuf::from(snapshot_name), elapsed)?;
 
     Ok(())
 }
