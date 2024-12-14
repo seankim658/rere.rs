@@ -189,17 +189,26 @@ fn print_diff(diff: &ReplayDiff) {
     println!("\nUnexpected {}:", diff.field);
     match (&diff.expected, &diff.actual) {
         (DiffContent::Single(expected), DiffContent::Single(actual)) => {
-            println!("  Expected: {}", expected);
-            println!("  Actual: {}", actual)
+            if expected != actual {
+                println!("  Expected: {} -> Actual: {}", expected, actual);
+            }
         }
         (DiffContent::Lines(expected), DiffContent::Lines(actual)) => {
             println!("  Expected:");
-            for line in expected {
-                println!("    {}", line);
+            let mut actual_iter = actual.iter();
+            for exp_line in expected {
+                if let Some(act_line) = actual_iter.next() {
+                    if exp_line != act_line {
+                        println!("    {} -> {}", exp_line, act_line);
+                    } else {
+                        println!("    {}", exp_line);
+                    }
+                } else {
+                    println!("    {} -> <missing>", exp_line);
+                }
             }
-            println!("  Actual:");
-            for line in actual {
-                println!("    {}", line);
+            for act_line in actual_iter {
+                println!("    <missing> -> {}", act_line);
             }
         }
         _ => unreachable!("Mismatched diff content types"),
