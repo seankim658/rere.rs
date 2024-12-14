@@ -37,11 +37,21 @@ pub struct ReplayConfig {
 #[derive(Debug, Serialize, Deserialize, Default)]
 pub struct StateConfig {
     pub latest_snapshots: Vec<PathBuf>,
-    pub timestamps: Vec<DateTime<Utc>>,
+    pub record_timestamps: Vec<DateTime<Utc>>,
     /// Vector of elapsed times for recorded snapshots. Uses custom serialization to store
     /// durations as nanoseconds instead of `[seconds, nanoseconds]` pairs.
     #[serde(with = "vec_duration")]
-    pub elapsed_time: Vec<Duration>,
+    pub record_elapsed_time: Vec<Duration>,
+    pub replay_timestamps: Vec<DateTime<Utc>>,
+    #[serde(with = "vec_duration")]
+    pub replay_elapsed_time: Vec<Duration>,
+    pub replay_results: Vec<ReplayResult>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, Copy)]
+pub enum ReplayResult {
+    Pass,
+    Fail,
 }
 
 impl Default for Config {
@@ -86,7 +96,7 @@ impl Config {
         Ok(())
     }
 
-    pub fn update_latest_snapshot(
+    pub fn update_latest_record(
         &mut self,
         config_path: &PathBuf,
         snapshot_path: PathBuf,
@@ -95,14 +105,35 @@ impl Config {
         let timestamp = Utc::now();
 
         self.state.latest_snapshots.insert(0, snapshot_path);
-        self.state.timestamps.insert(0, timestamp);
-        self.state.elapsed_time.insert(0, elapsed);
+        self.state.record_timestamps.insert(0, timestamp);
+        self.state.record_elapsed_time.insert(0, elapsed);
 
-        // Trim to history limit.
+        // Trim to history limit
         let limit = self.common.history;
         self.state.latest_snapshots.truncate(limit);
-        self.state.timestamps.truncate(limit);
-        self.state.elapsed_time.truncate(limit);
+        self.state.record_timestamps.truncate(limit);
+        self.state.record_elapsed_time.truncate(limit);
+
+        self.save(config_path)
+    }
+
+    pub fn update_latest_replay(
+        &mut self,
+        config_path: &PathBuf,
+        elapsed: Duration,
+        result: ReplayResult,
+    ) -> Result<()> {
+        let timestamp = Utc::now();
+
+        self.state.replay_timestamps.insert(0, timestamp);
+        self.state.replay_elapsed_time.insert(0, elapsed);
+        self.state.replay_results.insert(0, result);
+
+        // Trim to history limit
+        let limit = self.common.history;
+        self.state.replay_timestamps.truncate(limit);
+        self.state.replay_elapsed_time.truncate(limit);
+        self.state.replay_results.truncate(limit);
 
         self.save(config_path)
     }
