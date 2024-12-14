@@ -13,14 +13,7 @@ pub fn record(config: &mut Config, config_path: &PathBuf) -> Result<()> {
     let test_path = base_dir.join(test_file);
 
     // Read test list
-    let shells = std::fs::read_to_string(test_path)?
-        .lines()
-        .filter(|line| {
-            let trimmed = line.trim();
-            !trimmed.is_empty() && !trimmed.starts_with("//")
-        })
-        .map(|s| s.trim().to_owned())
-        .collect::<Vec<_>>();
+    let shells = load_test_commands(&test_path)?;
 
     // Capture outputs
     let start = std::time::Instant::now();
@@ -53,6 +46,24 @@ pub fn record(config: &mut Config, config_path: &PathBuf) -> Result<()> {
     config.update_latest_record(config_path, PathBuf::from(snapshot_name), elapsed)?;
 
     Ok(())
+}
+
+pub fn load_test_commands(test_path: &Path) -> Result<Vec<String>> {
+    let content = std::fs::read_to_string(test_path)?;
+    let shells: Vec<String> = content
+        .lines()
+        .filter(|line| {
+            let trimmed = line.trim();
+            !trimmed.is_empty() && !trimmed.starts_with("//")
+        })
+        .map(|s| s.trim().to_owned())
+        .collect();
+
+    if shells.is_empty() {
+        anyhow::bail!("Test file is empty or contains only comments.");
+    }
+
+    Ok(shells)
 }
 
 fn write_snapshot(path: &Path, outputs: &[CommandOutput]) -> Result<()> {

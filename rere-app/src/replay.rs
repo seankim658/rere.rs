@@ -1,5 +1,6 @@
 use crate::{
     config::{Config, ReplayResult},
+    record::load_test_commands,
     shell::capture,
 };
 use anyhow::Result;
@@ -42,14 +43,7 @@ pub fn replay(config: &mut Config, config_path: &PathBuf) -> Result<()> {
     };
 
     // Read test list
-    let shells = std::fs::read_to_string(test_path)?
-        .lines()
-        .filter(|line| {
-            let trimmed = line.trim();
-            !trimmed.is_empty() && !trimmed.starts_with("//")
-        })
-        .map(|s| s.trim().to_owned())
-        .collect::<Vec<_>>();
+    let shells = load_test_commands(&test_path)?;
 
     // Read snapshot
     let mut reader = BiReader::new(File::open(snapshot_path)?);
