@@ -15,7 +15,7 @@ jobs:
             os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
           - release_for: macOS-Intel
-            os: macos-12
+            os: macos-13
             target: x86_64-apple-darwin
           - release_for: macOS-ARM
             os: macos-latest
@@ -48,16 +48,20 @@ jobs:
             sha256sum rere-${{ matrix.platform.release_for }} > rere-${{ matrix.platform.release_for }}.sha256
           fi
       - name: Upload SHA256 checksum
-        uses: softprops/action-gh-release@v1
+        uses: actions/upload-release-asset@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
         with:
-          files: |
-            ./target/${{ matrix.platform.target }}/release/rere-${{ matrix.platform.release_for }}.sha256
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./target/${{ matrix.platform.target }}/release/rere-${{ matrix.platform.release_for }}.sha256
+          asset_name: rere-${{ matrix.platform.release_for }}.sha256
+          asset_content_type: text/plain
       - name: Upload Release Asset (Binary)
-        uses: softprops/action-gh-release@v1
+        uses: actions/upload-release-asset@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
         with:
-          files: |
-            ./target/${{ matrix.platform.target }}/release/rere-${{ matrix.platform.release_for }}${{ matrix.platform.target == 'x86_64-pc-windows-msvc' && '.exe' || '' }}
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./target/${{ matrix.platform.target }}/release/rere-${{ matrix.platform.release_for }}${{ matrix.platform.target == 'x86_64-pc-windows-msvc' && '.exe' || '' }}
+          asset_name: rere-${{ matrix.platform.release_for }}${{ matrix.platform.target == 'x86_64-pc-windows-msvc' && '.exe' || '' }}
+          asset_content_type: application/octet-stream
