@@ -28,7 +28,7 @@ To download and use the rere command line tool, you have two options: downloadin
 
 ### Release Binary
 
-To download a release binary, go to the [releases]() and download the binary for your OS.
+To download a release binary, go to the [releases](https://github.com/seankim658/rere.rs/releases) and download the binary for your OS.
 
 ### Building From Source
 
