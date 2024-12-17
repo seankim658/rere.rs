@@ -75,7 +75,6 @@ The test file is just a text file with one shell command per line. The test file
 ```
 // This line is a comment and will be ignored during recording
 echo "Hello World!"
-ls
 ```
 
 ### Recording
