@@ -104,7 +104,7 @@ Hello World!
 Note:
 - The empty newline at the bottom of the file is part of the bi format, be careful if you manually edit the `.bi` files (not recommended to do so).
   - Important to remember that although the bi format is human readable, it is a binary format. Manually editing any bi files will most likely have unintended consequences.
-- The snapshot file uses the `:s` (signed integer) field marker, which is introduced by this project and not described in the original bi format specification.
+- The snapshot file uses the `:s` (signed integer) field marker (for the return code), which is introduced by this project and not described in the original bi format specification.
 
 ### Replaying
 
